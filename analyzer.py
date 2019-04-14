@@ -54,20 +54,22 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
         if headers:
             next(csv_reader)
 
+        column_map = None
         with open(config_file) as config:
             column_map = json.load(config)
-            for row in csv_reader:
-                feedback_knock = row[column_map['feedback_knock']]
-                dam = row[column_map['DAM']]
-                gear = row[column_map['gear']]
-                rpm = row[column_map['RPM']]
+        for row in csv_reader:
+            feedback_knock = row[column_map['feedback_knock']]
+            dam = row[column_map['DAM']]
+            gear = row[column_map['gear']]
+            rpm = row[column_map['RPM']]
 
-                if float(feedback_knock) < 0:
-                    fbk_warn = FeedbackKnockWarning(feedback_knock, dam, gear, rpm)
-                    REPORT['warnings']['feedback_knock']['occurrences'].append(fbk_warn)
+            if float(feedback_knock) < 0:
+                fbk_warn = FeedbackKnockWarning(feedback_knock, dam, gear, rpm)
+                REPORT['warnings']['feedback_knock']['occurrences'].append(fbk_warn)
 
 
 def report():
+    """function used to report back the findings"""
     clean_slate = True
     warnings = REPORT['warnings']
     feedback_knock_warnings = warnings['feedback_knock']['occurrences']
@@ -78,8 +80,8 @@ def report():
         print '-----------------------------------------------------'
         print 'Knock Value\tDAM Value\tGear\t\tRPM'
         for warning in feedback_knock_warnings:
-            print '{}\t\t{}\t\t{}\t\t{}'.format(warning.knock_value,
-                                                warning.knock_value,
+            print '{}\t\t{}\t\t{}\t\t{}'.format(warning.knock,
+                                                warning.dam,
                                                 warning.gear,
                                                 warning.rpm
                                                )
