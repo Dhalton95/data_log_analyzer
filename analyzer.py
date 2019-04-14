@@ -17,7 +17,7 @@ def str2bool(v):
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--log_file', help='Access port data log file to analyze')
-PARSER.add_argument('--config_file', help='JSON csv column mapping')
+PARSER.add_argument('--config_file', default=None, help='JSON csv column mapping')
 PARSER.add_argument('headers',
                     type=str2bool,
                     nargs='?',
@@ -54,8 +54,12 @@ def main():
     """Main function"""
     args = PARSER.parse_args()
     log_file = args.log_file
+    config_file = args.config_file
     headers = args.headers
-    analyze(log_file, headers)
+    if config_file:
+        analyze(log_file, headers, config_file)
+    else:
+        analyze(log_file, headers)
     report()
 
 
