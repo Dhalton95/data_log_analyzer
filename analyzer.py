@@ -85,7 +85,7 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
             throttle_pos_total += float(throttle_pos)
 
             if float(feedback_knock) < 0:
-                fbk_warn = FeedbackKnockWarning(feedback_knock, dam, gear, rpm)
+                fbk_warn = FeedbackKnockWarning(feedback_knock, dam, throttle_pos, gear, rpm)
                 REPORT['warnings']['feedback_knock']['occurrences'].append(fbk_warn)
 
             if float(af_learning) > 8:
@@ -112,13 +112,14 @@ def report():
         clean_slate = False
         print warnings['feedback_knock']['display']
         print '-----------------------------------------------------'
-        print 'Knock Value\tDAM Value\tGear\t\tRPM'
+        print 'Knock Value\tDAM Value\tThrottle Position\tGear\tRPM'
         for warning in feedback_knock_warnings:
-            print '{}\t\t{}\t\t{}\t\t{}'.format(warning.knock,
-                                                warning.dam,
-                                                warning.gear,
-                                                warning.rpm
-                                               )
+            print '{}\t\t{}\t\t{}\t\t\t{}\t{}'.format(warning.knock,
+                                                      warning.dam,
+                                                      warning.throttle_pos,
+                                                      warning.gear,
+                                                      warning.rpm
+                                                     )
 
     if pos_af_learning_warnings:
         clean_slate = False
