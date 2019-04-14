@@ -2,7 +2,7 @@
 import argparse
 import csv
 import json
-from utils.warnings import FeedbackKnockWarning
+from utils.warnings import AFLearningWarning, FeedbackKnockWarning
 
 
 def str2bool(v):
@@ -32,6 +32,16 @@ REPORT = {
         'feedback_knock': {
             'display': 'Feedback knock levels dropped!',
             'occurrences': []
+        },
+        'af_learning': {
+            'positive': {
+                'display': 'ECU is adding a lot of fuel!',
+                'occurrences': []
+            },
+            'negative': {
+                'display': 'ECU is pulling a lot of fuel!',
+                'occurrences': []
+            }
         }
     }
 }
@@ -57,8 +67,11 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
         column_map = None
         with open(config_file) as config:
             column_map = json.load(config)
+
         for row in csv_reader:
             feedback_knock = row[column_map['feedback_knock']]
+            af_learning = row[column_map['AF_learning_1']]
+            throttle_pos = row[column_map['throttle_pos']]
             dam = row[column_map['DAM']]
             gear = row[column_map['gear']]
             rpm = row[column_map['RPM']]
@@ -67,12 +80,22 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
                 fbk_warn = FeedbackKnockWarning(feedback_knock, dam, gear, rpm)
                 REPORT['warnings']['feedback_knock']['occurrences'].append(fbk_warn)
 
+            if float(af_learning) > 8:
+                af_warn = AFLearningWarning(af_learning, throttle_pos, gear, rpm)
+                REPORT['warnings']['af_learning']['positive']['occurrences'].append(af_warn)
+
+            if float(af_learning) < -8:
+                af_warn = AFLearningWarning(af_learning, throttle_pos, gear, rpm)
+                REPORT['warnings']['af_learning']['negative']['occurrences'].append(af_warn)
+
 
 def report():
     """function used to report back the findings"""
     clean_slate = True
     warnings = REPORT['warnings']
     feedback_knock_warnings = warnings['feedback_knock']['occurrences']
+    pos_af_learning_warnings = warnings['af_learning']['positive']['occurrences']
+    neg_af_learning_warnings = warnings['af_learning']['negative']['occurrences']
 
     if feedback_knock_warnings:
         clean_slate = False
@@ -82,6 +105,30 @@ def report():
         for warning in feedback_knock_warnings:
             print '{}\t\t{}\t\t{}\t\t{}'.format(warning.knock,
                                                 warning.dam,
+                                                warning.gear,
+                                                warning.rpm
+                                               )
+
+    if pos_af_learning_warnings:
+        clean_slate = False
+        print warnings['af_learning']['positive']['display']
+        print '-----------------------------------------------------'
+        print 'AF Learning\tThrottle Position\tGear\tRPM'
+        for warning in pos_af_learning_warnings:
+            print '{}\t\t{}\t\t\t{}\t{}'.format(warning.af_learning,
+                                                warning.throttle_pos,
+                                                warning.gear,
+                                                warning.rpm
+                                               )
+
+    if neg_af_learning_warnings:
+        clean_slate = False
+        print warnings['af_learning']['negative']['display']
+        print '-----------------------------------------------------'
+        print 'AF Learning\tThrottle Position\tGear\tRPM'
+        for warning in neg_af_learning_warnings:
+            print '{}\t\t{}\t\t\t{}\t{}'.format(warning.af_learning,
+                                                warning.throttle_pos,
                                                 warning.gear,
                                                 warning.rpm
                                                )
