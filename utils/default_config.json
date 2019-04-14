@@ -1,7 +1,7 @@
 {
     "time": 0,
     "calculated_load": 1,
-    "CL_fule_target": 2,
+    "CL_fuel_target": 2,
     "comm_fuel_final": 3,
     "DAM": 4,
     "feedback_knock": 5,
