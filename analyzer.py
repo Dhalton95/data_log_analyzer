@@ -43,6 +43,9 @@ REPORT = {
                 'occurrences': []
             }
         }
+    },
+    'averages': {
+        'throttle_pos': None
     }
 }
 
@@ -68,13 +71,18 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
         with open(config_file) as config:
             column_map = json.load(config)
 
+        row_count = 0
+        throttle_pos_total = 0
         for row in csv_reader:
+            row_count += 1
             feedback_knock = row[column_map['feedback_knock']]
             af_learning = row[column_map['AF_learning_1']]
             throttle_pos = row[column_map['throttle_pos']]
             dam = row[column_map['DAM']]
             gear = row[column_map['gear']]
             rpm = row[column_map['RPM']]
+
+            throttle_pos_total += float(throttle_pos)
 
             if float(feedback_knock) < 0:
                 fbk_warn = FeedbackKnockWarning(feedback_knock, dam, gear, rpm)
@@ -88,11 +96,14 @@ def analyze(log_file, headers, config_file='./utils/default_config.json'):
                 af_warn = AFLearningWarning(af_learning, throttle_pos, gear, rpm)
                 REPORT['warnings']['af_learning']['negative']['occurrences'].append(af_warn)
 
+        REPORT['averages']['throttle_pos'] = float(throttle_pos_total / row_count)
+
 
 def report():
     """function used to report back the findings"""
     clean_slate = True
     warnings = REPORT['warnings']
+    averages = REPORT['averages']
     feedback_knock_warnings = warnings['feedback_knock']['occurrences']
     pos_af_learning_warnings = warnings['af_learning']['positive']['occurrences']
     neg_af_learning_warnings = warnings['af_learning']['negative']['occurrences']
@@ -135,6 +146,9 @@ def report():
 
     if clean_slate:
         print 'No warnings to report on! Sweet!'
+
+    print 'Averages:'
+    print '\tThrottle Position: {}'.format(averages['throttle_pos'])
 
 
 
